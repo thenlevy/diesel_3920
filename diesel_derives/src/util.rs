@@ -55,6 +55,24 @@ pub fn parse_eq<T: Parse>(input: ParseStream, help: &str) -> Result<T> {
     input.parse()
 }
 
+/// Specialized version of `parse_eq` for `syn::Type` with a customized error message.
+pub fn parse_eq_type(input: ParseStream, help: &str) -> Result<Type> {
+    if input.is_empty() {
+        return Err(syn::Error::new(
+            input.span(),
+            format!(
+                "unexpected end of input, expected `=`\n\
+                 help: the correct format looks like `#[diesel({help})]`",
+            ),
+        ));
+    }
+
+    input.parse::<Eq>()?;
+    input.parse::<Type>().map_err(|e| {
+        syn::Error::new(e.span(), "expected type")
+    })
+}
+
 pub fn parse_paren<T: Parse>(input: ParseStream, help: &str) -> Result<T> {
     if input.is_empty() {
         return Err(syn::Error::new(
